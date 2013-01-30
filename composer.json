@@ -1,0 +1,27 @@
+{
+    "name": "camspiers/php-lib-create",
+    "description": "Creates a PHP composer app with a bunch of useful defaults",
+    "licence": "MIT",
+    "authors": [
+        {
+            "name": "Cam Spiers",
+            "email": "camspiers@gmail.com"
+        }
+    ],
+    "require": {
+        "composer/composer": "1.0.*",
+        "symfony/console": "~2.1",
+        "symfony/process": "~2.1",
+        "symfony/dependency-injection": "~2.1",
+        "symfony/config": "~2.1",
+        "symfony/yaml": "~2.1",
+        "knplabs/github-api": "~1.1"
+    },
+    "autoload": {
+        "psr-0": {
+            "Camspiers": "src/"
+        }
+    },
+    "bin": ["bin/php-lib-create"],
+    "minimum-stability": "dev"
+}

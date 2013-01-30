@@ -1,0 +1,14 @@
+#!/usr/bin/env php
+<?php
+
+require_once __DIR__ . '/../vendor/autoload.php';
+
+use Camspiers\PhpLibCreate\Console\Application;
+use Camspiers\PhpLibCreate\Factory;
+
+$container = Factory::createContainer();
+
+$container->get('application')->run();
+
+$application = new Application(Factory::createContainer());
+$application->run();
