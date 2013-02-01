@@ -8,6 +8,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Process\Process;
 use Symfony\Component\Console\Input;
 use RuntimeException;
+use Composer\Json\JsonFile;
 
 class CreateCommand extends BaseCommand
 {
@@ -69,6 +70,12 @@ class CreateCommand extends BaseCommand
             $this->runAndCheckProcess(new Process('git init', $directory), $output);
         }
 
+        $projectName = $dialog->ask(
+            $output,
+            $dialog->getQuestion('What is your projects name?'),
+            ''
+        );
+
         //Ask to create github repo
         $createGithubRepo = $dialog->ask(
             $output,
@@ -79,9 +86,10 @@ class CreateCommand extends BaseCommand
         //if yes
         if ($createGithubRepo == 'yes') {
 
-            $returnCode = $this->getApplication()->find('create-github-repo')->run(new Input\ArrayInput(array(
+            $this->getApplication()->find('create-github-repo')->run(new Input\ArrayInput(array(
                 'command' => 'create-github-repo',
-                'directory' => $directory
+                'directory' => $directory,
+                '--name' => str_replace(' ', '-', strtolower($projectName))
             )), $output);
 
         } else {
@@ -128,24 +136,170 @@ class CreateCommand extends BaseCommand
                 3
             );
 
-            $output->writeln('Creating directory');
-            $this->runAndCheckProcess(new Process('mkdir -p src/' . str_replace('\\', '/', $namespace), $directory), $output);
+            $namespaceDir = str_replace('\\', '/', $namespace);
+
+            $srcDirectory = 'src/' . $namespaceDir;
+            $output->writeln('Creating directory ' . $srcDirectory);
+
+            $this->runAndCheckProcess(new Process(sprintf('mkdir -p %s', $srcDirectory), $directory), $output);
 
         }
 
-        //namespace
-        //
-        //php_cs
-        //
-        //travis
-        //
-        //bin
-        //
-        //composer
-        //
-        //phpunit
-        //
-        //README.md
-        //
+        if ($dialog->ask(
+            $output,
+            $dialog->getQuestion('Would you like to add a php-cs-fixer file?', 'yes'),
+            'yes'
+        ) == 'yes') {
+
+            $output->writeln('Creating file ' . $directory . '/.php_cs');
+
+            file_put_contents(
+                $directory . '/.php_cs',
+                <<<PHPCS
+<?php
+
+\$finder = Symfony\CS\Finder\DefaultFinder::create()
+    ->name('*.php')
+    ->exclude(array(
+        'vendor'
+    ))
+    ->in(__DIR__);
+
+return Symfony\CS\Config\Config::create()
+    ->finder(\$finder);
+PHPCS
+            );
+
+        }
+
+        if ($phpunit = $dialog->ask(
+            $output,
+            $dialog->getQuestion('Would you like to setup phpunit?', 'yes'),
+            'yes'
+        ) == 'yes') {
+
+            $output->writeln('Creating file ' . $directory . '/phpunit.xml.dist');
+
+            file_put_contents(
+                $directory . '/phpunit.xml.dist',
+                <<<PHPUNIT
+<?xml version="1.0" encoding="UTF-8"?>
+
+<phpunit backupGlobals="false"
+         backupStaticAttributes="false"
+         colors="true"
+         convertErrorsToExceptions="true"
+         convertNoticesToExceptions="true"
+         convertWarningsToExceptions="true"
+         processIsolation="false"
+         stopOnFailure="false"
+         syntaxCheck="false"
+         bootstrap="tests/bootstrap.php"
+>
+    <testsuites>
+        <testsuite name="$projectName">
+            <directory>./tests</directory>
+        </testsuite>
+    </testsuites>
+</phpunit>
+PHPUNIT
+            );
+
+            $testDirectory = $directory . '/tests/' . (isset($namespace) ? $namespace : '');
+
+            $output->writeln('Creating directory ' . $testDirectory);
+
+            $this->runAndCheckProcess(new Process(sprintf('mkdir -p %s', $testDirectory), $directory), $output);
+
+            $output->writeln('Creating file ' . $directory . '/tests/bootstrap.php');
+
+            file_put_contents(
+                $directory . '/tests/bootstrap.php',
+                <<<BOOTSTRAP
+<?php
+
+\$filename = __DIR__ . '/../vendor/autoload.php';
+
+if (!file_exists(\$filename)) {
+    echo 'You must first install the vendors using composer.' . PHP_EOL;
+    exit(1);
+}
+
+require_once \$filename;
+BOOTSTRAP
+            );
+
+        }
+
+        if ($dialog->ask(
+            $output,
+            $dialog->getQuestion('Would you like to setup travis?', 'yes'),
+            'yes'
+        ) == 'yes') {
+
+            $output->writeln('Creating file ' . $directory . '/.travis.yml');
+
+            file_put_contents(
+                $directory . '/.travis.yml',
+                <<<TRAVIS
+language: php
+
+php:
+  - 5.3
+  - 5.4
+
+before_script:
+  - composer self-update
+  - composer install --dev
+TRAVIS
+            );
+
+        }
+
+        chdir($directory);
+
+        $this->getApplication()->find('init')->run(new Input\ArrayInput(array(
+            'command' => 'init'
+        )), $output);
+
+        //Read result of composer.json, add autoloading stuff, add phpunit if not there, then run composer install
+
+        $composerFile = new JsonFile($directory . '/composer.json');
+
+        $composer = $composerFile->read();
+
+        if (count($composer['require']) === 0) {
+            unset($composer['require']);
+        }
+
+        $composerFile->write(array_merge(
+            $composer,
+            array(
+                'autoload' => array(
+                    'psr-0' => array(
+                        $namespace => 'src/'
+                    )
+                )
+            )
+        ));
+
+        $output->writeln('Running composer install');
+
+        $this->runAndCheckProcess(
+            new Process(
+                __DIR__ . str_repeat('/..', 4) . '/vendor/bin/composer install',
+                $directory
+            ),
+            $output
+        );
+
+        $output->writeln('Creating file ' . $directory . '/README.md');
+
+        file_put_contents(
+            $directory . '/README.md',
+            <<<README
+# $projectName
+README
+        );
     }
 }

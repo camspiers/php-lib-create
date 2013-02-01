@@ -5,6 +5,7 @@ namespace Camspiers\PhpLibCreate\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputOption;
 use RuntimeException;
 use Github\Client;
 
@@ -24,7 +25,8 @@ class CreateGithubCommand extends BaseCommand
             ->setName('create-github-repo')
             ->setDescription('Creates a git hub repository.')
             ->setDefinition(array(
-                new InputArgument('directory', InputArgument::OPTIONAL, 'Directory to add the github origin to', getcwd())
+                new InputArgument('directory', InputArgument::OPTIONAL, 'Directory to add the github origin to', getcwd()),
+                new InputOption('name', null, InputOption::VALUE_OPTIONAL, 'Github repo name')
             ));
     }
 
@@ -75,7 +77,7 @@ class CreateGithubCommand extends BaseCommand
             //Get the name of the repo they want to create
             $name = $dialog->askAndValidate(
                 $output,
-                $dialog->getQuestion('What do you want to call this github repo?'),
+                $dialog->getQuestion('What do you want to call this github repo?', $input->getOption('name')),
                 function ($input) {
                     $input = trim($input);
                     if ($input == '') {
@@ -84,7 +86,8 @@ class CreateGithubCommand extends BaseCommand
 
                     return $input;
                 },
-                3
+                3,
+                $input->getOption('name')
             );
 
             //Get the description if any
