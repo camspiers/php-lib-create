@@ -164,6 +164,8 @@ class CreateGithubCommand extends BaseCommand
                     $this->addGitOrigin($input, $output, $info['clone_url']);
                 }
 
+                break;
+
             } else {
 
                 if ($dialog->ask(
