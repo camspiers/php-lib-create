@@ -57,7 +57,7 @@ class CreateCommand extends BaseCommand
 
         //If the directory doesn't exist, create it
         if (!file_exists($directory)) {
-            $output->writeln('Creating directory');
+            $output->writeln('Creating directory ' . $directory);
             $this->runAndCheckProcess(new Process('mkdir ' . $directory), $output);
         } else {
             if (!is_dir($directory)) {
@@ -172,11 +172,11 @@ PHPCS
 
         }
 
-        if ($phpunit = $dialog->ask(
+        if ($phpunit = ($dialog->ask(
             $output,
             $dialog->getQuestion('Would you like to setup phpunit?', 'yes'),
             'yes'
-        ) == 'yes') {
+        ) == 'yes')) {
 
             $output->writeln('Creating file ' . $directory . '/phpunit.xml.dist');
 
@@ -205,7 +205,7 @@ PHPCS
 PHPUNIT
             );
 
-            $testDirectory = $directory . '/tests/' . (isset($namespace) ? $namespace : '');
+            $testDirectory = $directory . '/tests/' . (isset($namespaceDir) ? $namespaceDir : '');
 
             $output->writeln('Creating directory ' . $testDirectory);
 
@@ -262,8 +262,6 @@ TRAVIS
             'command' => 'init'
         )), $output);
 
-        //Read result of composer.json, add autoloading stuff, add phpunit if not there, then run composer install
-
         $composerFile = new JsonFile($directory . '/composer.json');
 
         $composer = $composerFile->read();
@@ -272,26 +270,61 @@ TRAVIS
             unset($composer['require']);
         }
 
-        $composerFile->write(array_merge(
-            $composer,
-            array(
-                'autoload' => array(
-                    'psr-0' => array(
-                        $namespace => 'src/'
+        if (isset($namespace) && $namespace) {
+
+            $composer = array_merge(
+                $composer,
+                array(
+                    'autoload' => array(
+                        'psr-0' => array(
+                            $namespace => 'src/'
+                        )
                     )
                 )
-            )
-        ));
+            );
 
-        $output->writeln('Running composer install');
+        }
 
-        $this->runAndCheckProcess(
-            new Process(
-                __DIR__ . str_repeat('/..', 4) . '/vendor/bin/composer install',
+        if (isset($phpunit) && $phpunit) {
+
+            $phpunit = array(
+                'phpunit/phpunit' => '~3.7'
+            );
+
+            if (isset($composer['require'])) {
+                $composer['require'] = array_merge($composer['require'], $phpunit);
+            } else {
+                $composer['require'] = $phpunit;
+            }
+
+        }
+
+        $composerFile->write($composer);
+
+        if ($dialog->ask(
+            $output,
+            $dialog->getQuestion('Would you like to run "composer install"?', 'yes'),
+            'yes'
+        ) == 'yes') {
+
+            $output->writeln('Running composer install');
+
+            $composerInstall = new Process(
+                realpath(__DIR__ . str_repeat('/..', 4)) . '/vendor/bin/composer install',
                 $directory
-            ),
-            $output
-        );
+            );
+
+            $this->runAndCheckProcess(
+                $composerInstall->setTimeout(1000),
+                $output,
+                function ($type, $buffer) use ($output) {
+                    if ('out' === $type) {
+                        $output->write($buffer);
+                    }
+                }
+            );
+
+        }
 
         $output->writeln('Creating file ' . $directory . '/README.md');
 
@@ -299,6 +332,12 @@ TRAVIS
             $directory . '/README.md',
             <<<README
 # $projectName
+
+# Installation (with composer)
+
+# Usage
+
+# Unit testing
 README
         );
     }

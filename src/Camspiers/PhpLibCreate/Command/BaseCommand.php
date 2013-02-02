@@ -10,9 +10,9 @@ use RuntimeException;
 
 abstract class BaseCommand extends Command
 {
-    protected function runAndCheckProcess(Process $process, OutputInterface $output)
+    protected function runAndCheckProcess(Process $process, OutputInterface $output, $callback = null)
     {
-        $result = $process->run();
+        $result = $process->run($callback);
         if ($result !== 0) {
             throw new RuntimeException($process->getErrorOutput());
         }
