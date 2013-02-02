@@ -3,7 +3,4 @@
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-use Camspiers\PhpLibCreate\Console\Application;
-use Camspiers\PhpLibCreate\Factory;
-
-Factory::createContainer()->get('application')->run();
+Camspiers\PhpLibCreate\Factory::createContainer()->get('application')->run();
