@@ -1,6 +1,6 @@
 {
     "name": "camspiers/php-lib-create",
-    "description": "Creates a PHP composer library with useful defaults (phpunit, travis, namespace, README)",
+    "description": "Creates a PHP composer library with useful defaults (github repo, phpunit, travis, namespace, php-cs-fixer, README)",
     "license": "MIT",
     "authors": [
         {
