@@ -1,5 +1,5 @@
 {
-    "hash": "4f5a816a2e5294720222595a88c55e9c",
+    "hash": "5a438be523843849e30208fb8fbaf0d9",
     "packages": [
         {
             "name": "composer/composer",
@@ -7,12 +7,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/composer/composer",
-                "reference": "16a9839688d8f87206a75ce441f4a103728d84f4"
+                "reference": "aa1c09380d8bde3436594ec27f62ec7c0cf37591"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://github.com/composer/composer/archive/16a9839688d8f87206a75ce441f4a103728d84f4.zip",
-                "reference": "16a9839688d8f87206a75ce441f4a103728d84f4",
+                "url": "https://api.github.com/repos/composer/composer/zipball/aa1c09380d8bde3436594ec27f62ec7c0cf37591",
+                "reference": "aa1c09380d8bde3436594ec27f62ec7c0cf37591",
                 "shasum": ""
             },
             "require": {
@@ -30,7 +30,7 @@
                 "ext-zip": "Enabling the zip extension allows you to unzip archives, and allows gzip compression of all internet traffic",
                 "ext-openssl": "Enabling the openssl extension allows you to access https URLs for repositories and packages"
             },
-            "time": "2013-01-28 17:10:07",
+            "time": "2013-02-01 22:37:12",
             "bin": [
                 "bin/composer"
             ],
@@ -80,14 +80,14 @@
             },
             "dist": {
                 "type": "zip",
-                "url": "https://github.com/justinrainbow/json-schema/zipball/v1.1.0",
+                "url": "https://github.com/justinrainbow/json-schema/archive/v1.1.0.zip",
                 "reference": "v1.1.0",
                 "shasum": ""
             },
             "require": {
                 "php": ">=5.3.0"
             },
-            "time": "2012-01-02 16:33:17",
+            "time": "2012-01-03 00:33:17",
             "type": "library",
             "autoload": {
                 "psr-0": {
@@ -131,12 +131,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/KnpLabs/php-github-api.git",
-                "reference": "f3db6b5814942b5fc070c4d3e8a949f2239c5724"
+                "reference": "35c32b3c02e856c8d642e862ded1c7b21c8952a7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://github.com/KnpLabs/php-github-api/archive/f3db6b5814942b5fc070c4d3e8a949f2239c5724.zip",
-                "reference": "f3db6b5814942b5fc070c4d3e8a949f2239c5724",
+                "url": "https://api.github.com/repos/KnpLabs/php-github-api/zipball/35c32b3c02e856c8d642e862ded1c7b21c8952a7",
+                "reference": "35c32b3c02e856c8d642e862ded1c7b21c8952a7",
                 "shasum": ""
             },
             "require": {
@@ -144,7 +144,7 @@
                 "ext-curl": "*",
                 "kriswallsmith/buzz": ">=0.7"
             },
-            "time": "2013-01-14 12:39:18",
+            "time": "2013-02-01 07:46:43",
             "type": "library",
             "extra": {
                 "branch-alias": {
@@ -279,22 +279,22 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/Config",
-                "reference": "bbab70a5220e3435180d51685e135c158b1fa2e8"
+                "reference": "fb7ce57ccb3c418c264a28754f88e0a229b5022b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://github.com/symfony/Config/archive/bbab70a5220e3435180d51685e135c158b1fa2e8.zip",
-                "reference": "bbab70a5220e3435180d51685e135c158b1fa2e8",
+                "url": "https://api.github.com/repos/symfony/Config/zipball/fb7ce57ccb3c418c264a28754f88e0a229b5022b",
+                "reference": "fb7ce57ccb3c418c264a28754f88e0a229b5022b",
                 "shasum": ""
             },
             "require": {
                 "php": ">=5.3.3"
             },
-            "time": "2013-01-28 17:21:49",
+            "time": "2013-01-31 21:39:01",
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "2.2-dev"
+                    "dev-master": "2.3-dev"
                 }
             },
             "autoload": {
@@ -326,22 +326,22 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/Console",
-                "reference": "fdb2d9320106926266a0f7a5a97aab7213e11ad6"
+                "reference": "f65e34d058f0990a724f78e8d091dc0a20e439ac"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://github.com/symfony/Console/archive/fdb2d9320106926266a0f7a5a97aab7213e11ad6.zip",
-                "reference": "fdb2d9320106926266a0f7a5a97aab7213e11ad6",
+                "url": "https://api.github.com/repos/symfony/Console/zipball/f65e34d058f0990a724f78e8d091dc0a20e439ac",
+                "reference": "f65e34d058f0990a724f78e8d091dc0a20e439ac",
                 "shasum": ""
             },
             "require": {
                 "php": ">=5.3.3"
             },
-            "time": "2013-01-24 15:55:08",
+            "time": "2013-01-31 21:39:01",
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "2.2-dev"
+                    "dev-master": "2.3-dev"
                 }
             },
             "autoload": {
@@ -373,12 +373,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/DependencyInjection",
-                "reference": "d032758b8387a3415b6d8a9f4e64463db01a9827"
+                "reference": "82cf3d804072a5daea6bd7f38cd009adba6e78bb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://github.com/symfony/DependencyInjection/archive/d032758b8387a3415b6d8a9f4e64463db01a9827.zip",
-                "reference": "d032758b8387a3415b6d8a9f4e64463db01a9827",
+                "url": "https://api.github.com/repos/symfony/DependencyInjection/zipball/82cf3d804072a5daea6bd7f38cd009adba6e78bb",
+                "reference": "82cf3d804072a5daea6bd7f38cd009adba6e78bb",
                 "shasum": ""
             },
             "require": {
@@ -392,11 +392,11 @@
                 "symfony/yaml": "2.2.*",
                 "symfony/config": "2.2.*"
             },
-            "time": "2013-01-28 17:21:49",
+            "time": "2013-01-31 21:39:01",
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "2.2-dev"
+                    "dev-master": "2.3-dev"
                 }
             },
             "autoload": {
@@ -428,22 +428,22 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/Finder",
-                "reference": "v2.2.0-BETA2"
+                "reference": "fc32f4f7c4a56079d8941b1a08aabd2de0c84cc7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://github.com/symfony/Finder/archive/v2.2.0-BETA2.zip",
-                "reference": "v2.2.0-BETA2",
+                "url": "https://api.github.com/repos/symfony/Finder/zipball/fc32f4f7c4a56079d8941b1a08aabd2de0c84cc7",
+                "reference": "fc32f4f7c4a56079d8941b1a08aabd2de0c84cc7",
                 "shasum": ""
             },
             "require": {
                 "php": ">=5.3.3"
             },
-            "time": "2013-01-18 20:36:32",
+            "time": "2013-01-31 21:39:01",
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "2.2-dev"
+                    "dev-master": "2.3-dev"
                 }
             },
             "autoload": {
@@ -475,22 +475,22 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/Process",
-                "reference": "v2.2.0-BETA2"
+                "reference": "c99475d555934461f079521d024d88a0d4e861eb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://github.com/symfony/Process/archive/v2.2.0-BETA2.zip",
-                "reference": "v2.2.0-BETA2",
+                "url": "https://api.github.com/repos/symfony/Process/zipball/c99475d555934461f079521d024d88a0d4e861eb",
+                "reference": "c99475d555934461f079521d024d88a0d4e861eb",
                 "shasum": ""
             },
             "require": {
                 "php": ">=5.3.3"
             },
-            "time": "2013-01-17 15:25:59",
+            "time": "2013-01-31 21:39:01",
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "2.2-dev"
+                    "dev-master": "2.3-dev"
                 }
             },
             "autoload": {
@@ -522,22 +522,22 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/Yaml",
-                "reference": "b293027f4030998a752a1ac06e80ae9e6bf6a763"
+                "reference": "f198ac28048eeceae852419c076123aaee59cd1c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://github.com/symfony/Yaml/archive/b293027f4030998a752a1ac06e80ae9e6bf6a763.zip",
-                "reference": "b293027f4030998a752a1ac06e80ae9e6bf6a763",
+                "url": "https://api.github.com/repos/symfony/Yaml/zipball/f198ac28048eeceae852419c076123aaee59cd1c",
+                "reference": "f198ac28048eeceae852419c076123aaee59cd1c",
                 "shasum": ""
             },
             "require": {
                 "php": ">=5.3.3"
             },
-            "time": "2013-01-27 16:49:19",
+            "time": "2013-01-31 21:39:01",
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "2.2-dev"
+                    "dev-master": "2.3-dev"
                 }
             },
             "autoload": {

@@ -1,6 +1,5 @@
 #!/usr/bin/env php
 <?php
-
 require_once __DIR__ . '/../vendor/autoload.php';
-
-Camspiers\PhpLibCreate\Factory::createContainer()->get('application')->run();
+$container = new PhpLibCreateServiceContainer;
+$container->get('application')->run();

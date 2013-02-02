@@ -20,8 +20,13 @@
     "autoload": {
         "psr-0": {
             "Camspiers": "src/"
-        }
+        },
+        "classmap": [ "config/" ]
     },
-    "bin": ["bin/php-lib-create"],
-    "minimum-stability": "dev"
+    "bin": [ "bin/php-lib-create", "bin/generate-container" ],
+    "minimum-stability": "dev",
+    "scripts": {
+        "post-install-cmd": [ "bin/generate-container", "vendor/bin/composer dump-autoload -o" ],
+        "post-update-cmd": [ "bin/generate-container", "vendor/bin/composer dump-autoload -o" ]
+    }
 }

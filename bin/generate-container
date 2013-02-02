@@ -1,0 +1,28 @@
+#!/usr/bin/env php
+<?php
+
+require_once __DIR__ . '/../vendor/autoload.php';
+
+use Camspiers\PhpLibCreate\Factory;
+use Camspiers\PhpLibCreate\DependancyInjection;
+use Symfony\Component\DependencyInjection\Dumper\PhpDumper;
+
+$container =  Factory::createContainer(
+	array(),
+	array(
+		new DependancyInjection\PhpLibCreateExtension
+	),
+	array(
+		new DependancyInjection\ApplicationCommandPass,
+		new DependancyInjection\ApplicationHelperPass
+	)
+);
+
+$dumper = new PhpDumper($container);
+
+file_put_contents(
+    __DIR__ . '/../config/PhpLibCreateServiceContainer.php',
+    $dumper->dump(array('class' => 'PhpLibCreateServiceContainer'))
+);
+
+echo 'Container generated', PHP_EOL;

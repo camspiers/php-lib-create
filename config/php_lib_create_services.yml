@@ -1,0 +1,30 @@
+parameters:
+    application.class: Camspiers\PhpLibCreate\Console\Application
+    create_command.class: Camspiers\PhpLibCreate\Command\CreateCommand
+    create_github_command.class: Camspiers\PhpLibCreate\Command\CreateGithubCommand
+    init_command.class: Composer\Command\InitCommand
+    dialog_helper.class: Composer\Command\Helper\DialogHelper
+    github_client.class: Github\Client
+services:
+    application:
+        class: %application.class%
+    create_command:
+        class: %create_command.class%
+        tags:
+            - { name: application.command }
+    create_github_command:
+        class: %create_github_command.class%
+        arguments:
+            - @github_client
+        tags:
+            - { name: application.command }
+    init_command:
+        class: %init_command.class%
+        tags:
+            - { name: application.command }
+    dialog_helper:
+        class: %dialog_helper.class%
+        tags:
+            - { name: application.helper }
+    github_client:
+        class: %github_client.class%

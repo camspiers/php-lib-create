@@ -3,18 +3,44 @@
 namespace Camspiers\PhpLibCreate;
 
 use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Camspiers\PhpLibCreate\DependancyInjection;
+use Symfony\Component\DependencyInjection\Extension\ExtensionInterface;
+use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
+use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
+use Symfony\Component\Config\FileLocator;
 
 class Factory
 {
-    public static function createContainer(array $parameters = array())
-    {
+    public static function createContainer(
+        array $parameters = array(),
+        array $extensions = array(),
+        array $compilerPasses = array()
+    ) {
         $container = new ContainerBuilder();
-        $container->registerExtension(new DependancyInjection\PhpLibCreateExtension());
-        $container->loadFromExtension('php_lib_create');
+
+        foreach ($extensions as $extension) {
+            if ($extension instanceof ExtensionInterface) {
+                $container->registerExtension($extension);
+                if (!method_exists($extension, 'getAutoload') || $extension->getAutoload()) {
+                    $container->loadFromExtension($extension->getAlias(), $parameters);
+                }
+            }
+        }
+
         $container->getParameterBag()->add($parameters);
-        $container->addCompilerPass(new DependancyInjection\ApplicationCommandPass);
-        $container->addCompilerPass(new DependancyInjection\ApplicationHelperPass);
+
+        foreach ($compilerPasses as $compilerPass) {
+            if ($compilerPass instanceof CompilerPassInterface) {
+                $container->addCompilerPass($compilerPass);
+            }
+        }
+
+        // $loader = new YamlFileLoader(
+        //     $container,
+        //     new FileLocator(__DIR__ . '/../../../config/')
+        // );
+
+        // $loader->load('config.yml');
+
         $container->compile();
 
         return $container;
