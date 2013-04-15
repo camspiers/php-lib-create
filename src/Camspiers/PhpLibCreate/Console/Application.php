@@ -7,7 +7,7 @@ use Symfony\Component\Console\Helper\HelperInterface;
 
 class Application extends BaseApplication
 {
-    const VERSION = '0.1.0';
+    const VERSION = '~package_version~';
 
     public function __construct()
     {
