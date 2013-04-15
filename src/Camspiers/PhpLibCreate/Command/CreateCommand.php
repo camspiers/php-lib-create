@@ -360,6 +360,8 @@ PHPCS
      */
     protected function processNamespace(OutputInterface $output, $dialog, $directory)
     {
+        $namespace = false;
+        $namespaceDir = false;
         if ($dialog->ask(
             $output,
             $dialog->getQuestion('Would you like to namespace your code?', 'yes'),
@@ -388,10 +390,7 @@ PHPCS
 
             $this->runAndCheckProcess(new Process(sprintf('mkdir -p %s', $srcDirectory), $directory), $output);
 
-            return array($namespace, $namespaceDir);
-
         }
-
         return array($namespace, $namespaceDir);
     }
     /**
