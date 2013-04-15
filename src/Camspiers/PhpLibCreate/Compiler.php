@@ -88,7 +88,8 @@ class Compiler
             $this->addFile($phar, new \SplFileInfo("$vendorDir/composer/include_paths.php"));
         }
         $this->addFile($phar, new \SplFileInfo("$vendorDir/composer/ClassLoader.php"));
-        $this->addBin($phar);
+        $this->addBin($phar, 'bin/php-lib-create', __DIR__ . '/../../../bin/php-lib-create');
+        $this->addBin($phar, 'vendor/bin/composer', __DIR__ . '/../../../vendor/bin/composer');
 
         // Stubs
         $phar->setStub($this->getStub());
@@ -116,11 +117,11 @@ class Compiler
         $phar[$path]->compress(\Phar::GZ);
     }
 
-    private function addBin($phar)
+    private function addBin($phar, $pharPath, $location)
     {
-        $content = file_get_contents(__DIR__ . '/../../../bin/php-lib-create');
+        $content = file_get_contents($location);
         $content = preg_replace('{^#!/usr/bin/env php\s*}', '', $content);
-        $phar->addFromString('bin/php-lib-create', $content);
+        $phar->addFromString($pharPath, $content);
     }
 
     private function getStub()
