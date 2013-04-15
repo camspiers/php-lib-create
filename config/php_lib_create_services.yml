@@ -1,6 +1,7 @@
 parameters:
     application.class: Camspiers\PhpLibCreate\Console\Application
     create_command.class: Camspiers\PhpLibCreate\Command\CreateCommand
+    self_update_command.class: Camspiers\PhpLibCreate\Command\SelfUpdateCommand
     create_github_command.class: Camspiers\PhpLibCreate\Command\CreateGithubCommand
     init_command.class: Composer\Command\InitCommand
     dialog_helper.class: Composer\Command\Helper\DialogHelper
@@ -8,6 +9,10 @@ parameters:
 services:
     application:
         class: %application.class%
+    self_update_command:
+        class: %self_update_command.class%
+        tags:
+            - { name: application.command }
     create_command:
         class: %create_command.class%
         tags:
