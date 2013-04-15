@@ -189,7 +189,7 @@ README
                 $output->writeln('Running composer install');
 
                 $composerInstall = new Process(
-                    realpath(__DIR__ . str_repeat('/..', 4)) . '/vendor/bin/composer install',
+                    __DIR__ . str_repeat('/..', 4) . '/vendor/bin/composer install',
                     $directory
                 );
 
