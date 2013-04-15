@@ -74,9 +74,9 @@ class CreateCommand extends BaseCommand
 
         chdir($directory);
 
-        $this->processComposer($output, $dialog, $directory, $namespace, $phpunit);
-
         $this->processReadme($output, $dialog, $directory, $projectName);
+
+        $this->processComposer($output, $dialog, $directory, $namespace, $phpunit);
     }
     /**
      * @param OutputInterface $output
@@ -127,7 +127,7 @@ README
         ) == 'yes'
         ) {
 
-            $this->getApplication()->find('init')->run(
+            $this->getComposerApplication()->find('init')->run(
                 new Input\ArrayInput(
                     array(
                         'command' => 'init'
@@ -186,21 +186,25 @@ README
             ) == 'yes'
             ) {
 
+                if ($dialog->ask(
+                    $output,
+                    $dialog->getQuestion('Would you like to install dev dependencies?', 'yes'),
+                    'yes'
+                ) == 'yes') {
+                    $requireDev = true;
+                } else {
+                    $requireDev = false;
+                }
+
                 $output->writeln('Running composer install');
 
-                $composerInstall = new Process(
-                    __DIR__ . str_repeat('/..', 4) . '/vendor/bin/composer install',
-                    $directory
-                );
-
-                $this->runAndCheckProcess(
-                    $composerInstall->setTimeout(1000),
-                    $output,
-                    function ($type, $buffer) use ($output) {
-                        if ('out' === $type) {
-                            $output->write($buffer);
-                        }
-                    }
+                $this->getComposerApplication()->run(
+                    new Input\ArrayInput(
+                        array(
+                            'command' => 'install',
+                            '--dev' => $requireDev
+                        )
+                    )
                 );
 
             }

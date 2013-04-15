@@ -23,10 +23,6 @@ services:
             - @github_client
         tags:
             - { name: application.command }
-    init_command:
-        class: %init_command.class%
-        tags:
-            - { name: application.command }
     dialog_helper:
         class: %dialog_helper.class%
         tags:

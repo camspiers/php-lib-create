@@ -3,11 +3,11 @@
 
 namespace Camspiers\PhpLibCreate\Command;
 
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input;
 use Symfony\Component\Console\Output;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Dumper\PhpDumper;
-use Symfony\Component\Console\Command\Command;
 
 class SelfUpdateCommand extends Command
 {

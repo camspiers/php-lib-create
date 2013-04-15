@@ -88,8 +88,19 @@ class Compiler
             $this->addFile($phar, new \SplFileInfo("$vendorDir/composer/include_paths.php"));
         }
         $this->addFile($phar, new \SplFileInfo("$vendorDir/composer/ClassLoader.php"));
+
+        $finder = new Finder();
+        $finder->files()
+            ->name('*.json')
+            ->in("$vendorDir/composer/composer/res");
+
+        foreach ($finder as $file) {
+            $this->addFile($phar, $file, false);
+        }
+
+        $this->addFile($phar, new \SplFileInfo("$vendorDir/composer/composer/src/Composer/IO/hiddeninput.exe"), false);
+
         $this->addBin($phar, 'bin/php-lib-create', __DIR__ . '/../../../bin/php-lib-create');
-        $this->addBin($phar, 'vendor/bin/composer', __DIR__ . '/../../../vendor/bin/composer');
 
         // Stubs
         $phar->setStub($this->getStub());
@@ -103,15 +114,19 @@ class Compiler
         file_put_contents('php-lib-create.phar.version', trim($this->version));
     }
 
-    private function addFile($phar, $file)
+    private function addFile($phar, $file, $strip = true)
     {
         $path = str_replace(dirname(dirname(dirname(__DIR__))) . DIRECTORY_SEPARATOR, '', $file->getRealPath());
 
-        $content = php_strip_whitespace($file);
-        if (basename($path) !== 'SelfUpdateCommand.php') {
-            $content = str_replace('~package_version~', $this->version, $content);
+        if ($strip) {
+            $content = php_strip_whitespace($file);
+            if (basename($path) !== 'SelfUpdateCommand.php') {
+                $content = str_replace('~package_version~', $this->version, $content);
+            }
+            $content = str_replace(realpath(__DIR__ . '/../../../'), '.', $content);
+        } else {
+            $content = file_get_contents($file);
         }
-        $content = str_replace(realpath(__DIR__ . '/../../../'), '.', $content);
 
         $phar->addFromString($path, $content);
         $phar[$path]->compress(\Phar::GZ);
