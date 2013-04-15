@@ -2,181 +2,264 @@
 
 namespace Camspiers\PhpLibCreate\Command;
 
-use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Input\InputOption;
-use Symfony\Component\Process\Process;
-use Symfony\Component\Console\Input;
-use RuntimeException;
 use Composer\Json\JsonFile;
+use RuntimeException;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Input;
+use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Process\Process;
 
+/**
+ * Class CreateCommand
+ * @package Camspiers\PhpLibCreate\Command
+ */
 class CreateCommand extends BaseCommand
 {
 
+    /**
+     *
+     */
     protected function configure()
     {
         $this
             ->setName('create')
             ->setDescription('Creates a php library based on answered questions.')
-            ->setDefinition(array(
-                new InputOption('directory', 'd', InputOption::VALUE_OPTIONAL, 'Directory to create PHP library in', false)
-            ));
+            ->setDefinition(
+                array(
+                    new InputOption(
+                        'directory',
+                        'd',
+                        InputOption::VALUE_OPTIONAL,
+                        'Directory to create PHP library in',
+                        false
+                    )
+                )
+            );
     }
 
+    /**
+     * @param InputInterface  $input
+     * @param OutputInterface $output
+     * @throws \RuntimeException
+     */
     public function execute(InputInterface $input, OutputInterface $output)
     {
         $dialog = $this->getHelperSet()->get('dialog');
         $formatter = $this->getHelperSet()->get('formatter');
 
-        $output->writeln(array(
-            '',
-            $formatter->formatBlock('Welcome to PHP library creator', 'bg=blue;fg=white', true),
-            ''
-        ));
-
-        $directory = $input->getOption('directory');
-
-        if (!$directory) {
-            $directory = $dialog->askAndValidate(
-                $output,
-                $dialog->getQuestion('What directory would you like this PHP library to be created in?', getcwd()),
-                function ($input) {
-                    $input = trim($input);
-                    if ($input == '') {
-                        throw new RuntimeException('You must enter a valid directory');
-                    }
-
-                    return $input;
-                },
-                3,
-                getcwd()
-            );
-        }
-
-        $directory = $this->processPath($directory);
-
-        //If the directory doesn't exist, create it
-        if (!file_exists($directory)) {
-            $output->writeln('Creating directory ' . $directory);
-            $this->runAndCheckProcess(new Process('mkdir ' . $directory), $output);
-        } else {
-            if (!is_dir($directory)) {
-                throw new RuntimeException('Directory specified is not a directory');
-            }
-        }
-        //If the directory isn't a git repository, initialize it
-        if (!file_exists($directory . '/.git')) {
-            $output->writeln('Creating git repository');
-            $this->runAndCheckProcess(new Process('git init', $directory), $output);
-        }
-
-        $projectName = $dialog->ask(
-            $output,
-            $dialog->getQuestion('What is your projects name?'),
-            ''
+        $output->writeln(
+            array(
+                '',
+                $formatter->formatBlock('Welcome to PHP library creator', 'bg=blue;fg=white', true),
+                ''
+            )
         );
 
-        //Ask to create github repo
-        $createGithubRepo = $dialog->ask(
+        $directory = $this->processDirectory($input, $output, $dialog);
+
+        $this->processGit($output, $directory);
+
+        $projectName = $this->processName($output, $dialog);
+
+        $this->processGitRepo($input, $output, $dialog, $directory, $projectName);
+
+        list($namespace, $namespaceDir) = $this->processNamespace($output, $dialog, $directory);
+
+        $this->processCsFixer($output, $dialog, $directory);
+
+        $phpunit = $this->processPhpUnit($output, $dialog, $directory, $projectName, $namespaceDir);
+
+        $this->processTravis($output, $dialog, $directory);
+
+        chdir($directory);
+
+        $this->processComposer($output, $dialog, $directory, $namespace, $phpunit);
+
+        $this->processReadme($output, $dialog, $directory, $projectName);
+    }
+    /**
+     * @param OutputInterface $output
+     * @param                 $dialog
+     * @param                 $directory
+     * @param                 $projectName
+     */
+    protected function processReadme(OutputInterface $output, $dialog, $directory, $projectName)
+    {
+        if ($dialog->ask(
             $output,
-            $dialog->getQuestion('Do you want to create a github repository?', 'yes'),
+            $dialog->getQuestion('Would you like to create a readme file?', 'yes'),
             'yes'
-        );
+        ) == 'yes'
+        ) {
 
-        //if yes
-        if ($createGithubRepo == 'yes') {
+            $output->writeln('Creating file ' . $directory . '/README.md');
 
-            $this->getApplication()->find('create-github-repo')->run(new Input\ArrayInput(array(
-                'command' => 'create-github-repo',
-                'directory' => $directory,
-                '--name' => str_replace(' ', '-', strtolower($projectName))
-            )), $output);
+            file_put_contents(
+                $directory . '/README.md',
+                <<<README
+# $projectName
 
-        } else {
+## Installation (with composer)
 
-            $addExistingOrigin = $dialog->ask(
-                $output,
-                $dialog->getQuestion('Do you want to add an \'origin\' to this git repo?', 'yes'),
-                'yes'
+## Usage
+
+## Unit testing
+    $ composer install --dev
+    $ vendor/bin/phpunit
+README
+            );
+        }
+    }
+    /**
+     * @param OutputInterface $output
+     * @param                 $dialog
+     * @param                 $directory
+     * @param                 $namespace
+     * @param                 $phpunit
+     */
+    protected function processComposer(OutputInterface $output, $dialog, $directory, $namespace, $phpunit)
+    {
+        if ($dialog->ask(
+            $output,
+            $dialog->getQuestion('Would you like to set up a composer file?', 'yes'),
+            'yes'
+        ) == 'yes'
+        ) {
+
+            $this->getApplication()->find('init')->run(
+                new Input\ArrayInput(array(
+                    'command' => 'init'
+                )),
+                $output
             );
 
-            if ($addExistingOrigin == 'yes') {
+        }
 
-                $origin = $dialog->ask(
-                    $output,
-                    $dialog->getQuestion('What is the origin?'),
-                    false
+        if (file_exists($directory . '/composer.json')) {
+
+            $composerFile = new JsonFile($directory . '/composer.json');
+
+            $composer = $composerFile->read();
+
+            if (count($composer['require']) === 0) {
+                unset($composer['require']);
+            }
+
+            if (isset($namespace) && $namespace) {
+
+                $composer = array_merge(
+                    $composer,
+                    array(
+                        'autoload' => array(
+                            'psr-0' => array(
+                                $namespace => 'src/'
+                            )
+                        )
+                    )
                 );
 
-                if ($origin) {
-                    $this->addGitOrigin($input, $output, $origin);
+            }
+
+            if (isset($phpunit) && $phpunit) {
+
+                $phpunit = array(
+                    'phpunit/phpunit' => '~3.7'
+                );
+
+                if (isset($composer['require-dev'])) {
+                    $composer['require-dev'] = array_merge($composer['require-dev'], $phpunit);
+                } else {
+                    $composer['require-dev'] = $phpunit;
                 }
 
             }
 
-        }
+            $composerFile->write($composer);
 
-        if ($dialog->ask(
-            $output,
-            $dialog->getQuestion('Would you like to namespace your code?', 'yes'),
-            'yes'
-        ) == 'yes') {
-
-            $namespace = $dialog->askAndValidate(
+            if ($dialog->ask(
                 $output,
-                $dialog->getQuestion('What is the namespace?'),
-                function ($input) {
-                    $input = trim($input);
-                    if ($input == '') {
-                        throw new RuntimeException('You must enter a valid namespace');
+                $dialog->getQuestion('Would you like to run "composer install"?', 'yes'),
+                'yes'
+            ) == 'yes'
+            ) {
+
+                $output->writeln('Running composer install');
+
+                $composerInstall = new Process(
+                    realpath(__DIR__ . str_repeat('/..', 4)) . '/vendor/bin/composer install',
+                    $directory
+                );
+
+                $this->runAndCheckProcess(
+                    $composerInstall->setTimeout(1000),
+                    $output,
+                    function ($type, $buffer) use ($output) {
+                        if ('out' === $type) {
+                            $output->write($buffer);
+                        }
                     }
+                );
 
-                    return $input;
-                },
-                3
-            );
-
-            $namespaceDir = str_replace('\\', '/', $namespace);
-
-            $srcDirectory = 'src/' . $namespaceDir;
-            $output->writeln('Creating directory ' . $srcDirectory);
-
-            $this->runAndCheckProcess(new Process(sprintf('mkdir -p %s', $srcDirectory), $directory), $output);
+            }
 
         }
-
+    }
+    /**
+     * @param OutputInterface $output
+     * @param                 $dialog
+     * @param                 $directory
+     */
+    protected function processTravis(OutputInterface $output, $dialog, $directory)
+    {
         if ($dialog->ask(
             $output,
-            $dialog->getQuestion('Would you like to add a php-cs-fixer file?', 'yes'),
+            $dialog->getQuestion('Would you like to setup travis?', 'yes'),
             'yes'
-        ) == 'yes') {
+        ) == 'yes'
+        ) {
 
-            $output->writeln('Creating file ' . $directory . '/.php_cs');
+            $output->writeln('Creating file ' . $directory . '/.travis.yml');
 
             file_put_contents(
-                $directory . '/.php_cs',
-                <<<PHPCS
-<?php
+                $directory . '/.travis.yml',
+                <<<TRAVIS
+language: php
 
-\$finder = Symfony\CS\Finder\DefaultFinder::create()
-    ->name('*.php')
-    ->exclude(array(
-        'vendor'
-    ))
-    ->in(__DIR__);
+php:
+  - 5.3
+  - 5.4
 
-return Symfony\CS\Config\Config::create()
-    ->finder(\$finder);
-PHPCS
+before_script:
+  - composer self-update
+  - composer install --dev
+TRAVIS
             );
 
         }
-
-        if ($phpunit = ($dialog->ask(
+    }
+    /**
+     * @param OutputInterface $output
+     * @param                 $dialog
+     * @param                 $directory
+     * @param                 $projectName
+     * @param                 $namespaceDir
+     * @return bool
+     */
+    protected function processPhpUnit(OutputInterface $output, $dialog, $directory, $projectName, $namespaceDir)
+    {
+        $phpunit = $dialog->ask(
             $output,
-            $dialog->getQuestion('Would you like to setup phpunit?', 'yes'),
+            $dialog->getQuestion(
+                'Would you like to setup phpunit?',
+                'yes'
+            ),
             'yes'
-        ) == 'yes')) {
+        );
+
+        $phpunit = $phpunit == 'yes';
+
+        if ($phpunit) {
 
             $output->writeln('Creating file ' . $directory . '/phpunit.xml.dist');
 
@@ -231,114 +314,209 @@ BOOTSTRAP
 
         }
 
+        return $phpunit;
+    }
+    /**
+     * @param OutputInterface $output
+     * @param                 $dialog
+     * @param                 $directory
+     */
+    protected function processCsFixer(OutputInterface $output, $dialog, $directory)
+    {
         if ($dialog->ask(
             $output,
-            $dialog->getQuestion('Would you like to setup travis?', 'yes'),
+            $dialog->getQuestion('Would you like to add a php-cs-fixer file?', 'yes'),
             'yes'
-        ) == 'yes') {
+        ) == 'yes'
+        ) {
 
-            $output->writeln('Creating file ' . $directory . '/.travis.yml');
+            $output->writeln('Creating file ' . $directory . '/.php_cs');
 
             file_put_contents(
-                $directory . '/.travis.yml',
-                <<<TRAVIS
-language: php
+                $directory . '/.php_cs',
+                <<<PHPCS
+<?php
 
-php:
-  - 5.3
-  - 5.4
+\$finder = Symfony\CS\Finder\DefaultFinder::create()
+    ->name('*.php')
+    ->exclude(array(
+        'vendor'
+    ))
+    ->in(__DIR__);
 
-before_script:
-  - composer self-update
-  - composer install --dev
-TRAVIS
+return Symfony\CS\Config\Config::create()
+    ->finder(\$finder);
+PHPCS
             );
 
         }
+    }
+    /**
+     * @param OutputInterface $output
+     * @param                 $dialog
+     * @param                 $directory
+     * @return array
+     * @throws \RuntimeException
+     */
+    protected function processNamespace(OutputInterface $output, $dialog, $directory)
+    {
+        if ($dialog->ask(
+            $output,
+            $dialog->getQuestion('Would you like to namespace your code?', 'yes'),
+            'yes'
+        ) == 'yes'
+        ) {
 
-        chdir($directory);
+            $namespace = $dialog->askAndValidate(
+                $output,
+                $dialog->getQuestion('What is the namespace?'),
+                function ($input) {
+                    $input = trim($input);
+                    if ($input == '') {
+                        throw new RuntimeException('You must enter a valid namespace');
+                    }
 
-        $this->getApplication()->find('init')->run(new Input\ArrayInput(array(
-            'command' => 'init'
-        )), $output);
+                    return $input;
+                },
+                3
+            );
 
-        $composerFile = new JsonFile($directory . '/composer.json');
+            $namespaceDir = str_replace('\\', '/', $namespace);
 
-        $composer = $composerFile->read();
+            $srcDirectory = 'src/' . $namespaceDir;
+            $output->writeln('Creating directory ' . $srcDirectory);
 
-        if (count($composer['require']) === 0) {
-            unset($composer['require']);
+            $this->runAndCheckProcess(new Process(sprintf('mkdir -p %s', $srcDirectory), $directory), $output);
+
+            return array($namespace, $namespaceDir);
+
         }
 
-        if (isset($namespace) && $namespace) {
+        return array($namespace, $namespaceDir);
+    }
+    /**
+     * @param InputInterface  $input
+     * @param OutputInterface $output
+     * @param                 $dialog
+     * @param                 $directory
+     * @param                 $projectName
+     */
+    protected function processGitRepo(InputInterface $input, OutputInterface $output, $dialog, $directory, $projectName)
+    {
+        //Ask to create github repo
+        $createGithubRepo = $dialog->ask(
+            $output,
+            $dialog->getQuestion('Do you want to create a github repository?', 'yes'),
+            'yes'
+        );
 
-            $composer = array_merge(
-                $composer,
-                array(
-                    'autoload' => array(
-                        'psr-0' => array(
-                            $namespace => 'src/'
-                        )
+        //if yes
+        if ($createGithubRepo == 'yes') {
+
+            $this->getApplication()->find('create-github-repo')->run(
+                new Input\ArrayInput(
+                    array(
+                        'command'   => 'create-github-repo',
+                        'directory' => $directory,
+                        '--name'    => str_replace(' ', '-', strtolower($projectName))
                     )
-                )
+                ),
+                $output
             );
 
-        }
+        } else {
 
-        if (isset($phpunit) && $phpunit) {
-
-            $phpunit = array(
-                'phpunit/phpunit' => '~3.7'
+            $addExistingOrigin = $dialog->ask(
+                $output,
+                $dialog->getQuestion('Do you want to add an \'origin\' to this git repo?', 'yes'),
+                'yes'
             );
 
-            if (isset($composer['require'])) {
-                $composer['require'] = array_merge($composer['require'], $phpunit);
-            } else {
-                $composer['require'] = $phpunit;
+            if ($addExistingOrigin == 'yes') {
+
+                $origin = $dialog->ask(
+                    $output,
+                    $dialog->getQuestion('What is the origin?'),
+                    false
+                );
+
+                if ($origin) {
+                    $this->addGitOrigin($input, $output, $origin);
+                }
+
             }
 
         }
-
-        $composerFile->write($composer);
-
-        if ($dialog->ask(
+    }
+    /**
+     * @param OutputInterface $output
+     * @param                 $dialog
+     * @return mixed
+     */
+    protected function processName(OutputInterface $output, $dialog)
+    {
+        $projectName = $dialog->ask(
             $output,
-            $dialog->getQuestion('Would you like to run "composer install"?', 'yes'),
-            'yes'
-        ) == 'yes') {
+            $dialog->getQuestion('What is your projects name?'),
+            ''
+        );
 
-            $output->writeln('Running composer install');
+        return $projectName;
+    }
+    /**
+     * @param OutputInterface $output
+     * @param                 $directory
+     */
+    protected function processGit(OutputInterface $output, $directory)
+    {
+        //If the directory isn't a git repository, initialize it
+        if (!file_exists($directory . '/.git')) {
+            $output->writeln('Creating git repository');
+            $this->runAndCheckProcess(new Process('git init', $directory), $output);
+        }
+    }
+    /**
+     * @param InputInterface  $input
+     * @param OutputInterface $output
+     * @param                 $dialog
+     * @return mixed
+     * @throws \RuntimeException
+     */
+    protected function processDirectory(InputInterface $input, OutputInterface $output, $dialog)
+    {
+        $directory = $input->getOption('directory');
 
-            $composerInstall = new Process(
-                realpath(__DIR__ . str_repeat('/..', 4)) . '/vendor/bin/composer install',
-                $directory
-            );
-
-            $this->runAndCheckProcess(
-                $composerInstall->setTimeout(1000),
+        if (!$directory) {
+            $directory = $dialog->askAndValidate(
                 $output,
-                function ($type, $buffer) use ($output) {
-                    if ('out' === $type) {
-                        $output->write($buffer);
+                $dialog->getQuestion('What directory would you like this PHP library to be created in?', getcwd()),
+                function ($input) {
+                    $input = trim($input);
+                    if ($input == '') {
+                        throw new RuntimeException('You must enter a valid directory');
                     }
-                }
-            );
 
+                    return $input;
+                },
+                3,
+                getcwd()
+            );
         }
 
-        $output->writeln('Creating file ' . $directory . '/README.md');
+        $directory = $this->processPath($directory);
 
-        file_put_contents(
-            $directory . '/README.md',
-            <<<README
-# $projectName
+        //If the directory doesn't exist, create it
+        if (!file_exists($directory)) {
+            $output->writeln('Creating directory ' . $directory);
+            $this->runAndCheckProcess(new Process('mkdir ' . $directory), $output);
 
-# Installation (with composer)
+            return $directory;
+        } else {
+            if (!is_dir($directory)) {
+                throw new RuntimeException('Directory specified is not a directory');
+            }
 
-# Usage
-
-# Unit testing
-README
-        );
+            return $directory;
+        }
     }
 }
