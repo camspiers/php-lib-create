@@ -128,9 +128,11 @@ README
         ) {
 
             $this->getApplication()->find('init')->run(
-                new Input\ArrayInput(array(
-                    'command' => 'init'
-                )),
+                new Input\ArrayInput(
+                    array(
+                        'command' => 'init'
+                    )
+                ),
                 $output
             );
 
